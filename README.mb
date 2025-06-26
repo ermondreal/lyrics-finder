@@ -1,0 +1,26 @@
+# 🎤 Lyrics Finder with Spotify Autocomplete
+
+A lightweight web app that suggests artists and songs using the Spotify API, and fetches lyrics from lyrics.ovh.
+
+## 🛠 Setup
+
+### Backend
+1. Run `npm install`
+2. Create a `.env` file:
+3. Run the server:
+
+### Frontend
+- Open `public/index.html` in your browser.
+- As you type, artist and song suggestions appear from Spotify.
+- When both fields are filled, click "Get Lyrics" to fetch lyrics.
+
+## 🧠 Tech Stack
+- Node.js + Express (backend)
+- Spotify Web API (autocomplete)
+- Lyrics.ovh (lyrics)
+- HTML/CSS/JS (frontend)
+
+---
+
+That wraps everything! Your lyrics app is now ready to sing 🎶  
+Let me know if you’d like a version that runs on GitHub Pages or even turns into a mobile app.

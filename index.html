@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Lyrics Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px;
+      width: 250px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      background: #f0f0f0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    li {
+      padding: 6px;
+      cursor: pointer;
+    }
+    li:hover {
+      background: #ddd;
+    }
+    pre {
+      white-space: pre-wrap;
+      background: #f9f9f9;
+      padding: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+    <h1>Lyrics Finder with Spotify Autocomplete</h1>
+
+    <label>Artist:</label><br>
+    <input id="artist" placeholder="Start typing an artist...">
+    <ul id="artistList"></ul>
+
+    <br><label>Song:</label><br>
+    <input id="title" placeholder="Start typing a song...">
+    <ul id="songList"></ul>
+
+    <br><button onclick="getLyrics()">Get Lyrics</button>
+        <pre id="lyrics"></pre>
+
+    <script>
+  let selectedArtistName = "";
+
+  // Artist search and selection
+  document.getElementById("artist").addEventListener("input", async function () {
+    const query = this.value.trim();
+    const artistList = document.getElementById("artistList");
+    artistList.innerHTML = "";
+    selectedArtistName = ""; // reset if user starts typing again
+
+    if (!query) return;
+
+    const res = await fetch(`http://localhost:3000/search?type=artist&q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    const artists = data.artists?.items || [];
+
+    artists.forEach(artist => {
+      const li = document.createElement("li");
+      li.textContent = artist.name;
+      li.onclick = () => {
+        selectedArtistName = artist.name;
+        document.getElementById("artist").value = artist.name;
+        artistList.innerHTML = '';
+        document.getElementById("title").value = "";
+        document.getElementById("songList").innerHTML = "";
+      };
+      artistList.appendChild(li);
+    });
+  });
+
+  // Song search suggestions (based on selected artist if provided)
+  document.getElementById("title").addEventListener("input", async function () {
+    const query = this.value.trim();
+    const songList = document.getElementById("songList");
+    songList.innerHTML = "";
+    if (!query) return;
+
+    const artistQuery = selectedArtistName ? ` artist:${selectedArtistName}` : '';
+    const res = await fetch(`http://localhost:3000/search?type=track&q=${encodeURIComponent(query + artistQuery)}`);
+    const data = await res.json();
+    const tracks = data.tracks?.items || [];
+
+    tracks.forEach(track => {
+      const li = document.createElement("li");
+      li.textContent = `${track.name} – ${track.artists[0].name}`;
+      li.onclick = () => {
+        document.getElementById("title").value = track.name;
+        songList.innerHTML = "";
+        if (!selectedArtistName) {
+          selectedArtistName = track.artists[0].name;
+          document.getElementById("artist").value = selectedArtistName;
+        }
+      };
+      songList.appendChild(li);
+    });
+  });
+
+  // Lyrics Fetcher
+  async function getLyrics() {
+  const artist = document.getElementById("artist").value.trim();
+  const title = document.getElementById("title").value.trim();
+  const lyricsEl = document.getElementById("lyrics");
+
+  if (!title) {
+    lyricsEl.textContent = "Please enter a song title.";
+    return;
+  }
+
+  const finalArtist = artist || selectedArtistName;
+  if (!finalArtist) {
+    lyricsEl.textContent = "Please select an artist or pick one from song suggestions.";
+    return;
+  }
+
+  lyricsEl.textContent = "Fetching lyrics...";
+
+  // ⏱ Set timeout limit (e.g., 10 seconds)
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10 seconds
+
+  try {
+    const res = await fetch(
+      `https://api.lyrics.ovh/v1/${encodeURIComponent(finalArtist)}/${encodeURIComponent(title)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeout);
+
+    const data = await res.json();
+    lyricsEl.textContent = data.lyrics || "Lyrics not found.";
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      lyricsEl.textContent = "Lyrics request timed out. Please try again.";
+    } else {
+      lyricsEl.textContent = "Error fetching lyrics.";
+      console.error(error);
+    }
+  }
+}
+</script>
+</body>
+</html>
