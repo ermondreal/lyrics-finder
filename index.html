@@ -61,7 +61,7 @@
 
     if (!query) return;
 
-    const res = await fetch(`http://localhost:3000/search?type=artist&q=${encodeURIComponent(query)}`);
+    const res = await fetch(`https://lyrics-backend-wsxl.onrender.com/search?type=artist&q=${encodeURIComponent(query)}`);
     const data = await res.json();
     const artists = data.artists?.items || [];
 
@@ -87,7 +87,7 @@
     if (!query) return;
 
     const artistQuery = selectedArtistName ? ` artist:${selectedArtistName}` : '';
-    const res = await fetch(`http://localhost:3000/search?type=track&q=${encodeURIComponent(query + artistQuery)}`);
+    const res = await fetch(`https://lyrics-backend-wsxl.onrender.com/search?type=track&q=${encodeURIComponent(query + artistQuery)}`);
     const data = await res.json();
     const tracks = data.tracks?.items || [];
 
